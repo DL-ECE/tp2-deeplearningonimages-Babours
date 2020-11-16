@@ -174,14 +174,20 @@ def normalize_tensor(input_tensor: torch.Tensor) -> torch.Tensor:
 
 def sigmoid(input_tensor: torch.Tensor) -> torch.Tensor:
     """Apply a sigmoid to the input Tensor"""
-    fct = torch.nn.Sigmoid()
-    sig = fct(input_tensor)
+    if(torch.is_tensor(input_tensor)):
+      fct = torch.nn.Sigmoid()
+      sig = fct(input_tensor)
+    else:
+      sig = torch.sigmoid(torch.from_numpy(input_tensor))
     return  sig
 
 def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
     """Apply a softmax to the input tensor"""
-    fct = torch.nn.Softmax(dim=1)
-    softm = fct(input_tensor)
+    if(torch.is_tensor(input_tensor)):
+      fct = torch.nn.Softmax(dim=1)
+      softm = fct(input_tensor)
+    else:
+      softm = torch.softmax(torch.from_numpy(input_tensor),dim=1)
     return  softm
 
 def target_to_one_hot(targets: torch.Tensor, num_classes=10) -> torch.Tensor:
@@ -617,12 +623,16 @@ What are the different classes
 
 def fashion_mnist_dataset_answer():
     shape = (28,28)  # replace None with the value you found
-    number_of_images_in_train_set = 1875
-    number_of_images_in_test_set = 313
+    number_of_images_in_train_set = 60000
+    number_of_images_in_test_set = 10000
     number_of_classes = 10
     return {'shape': shape, 'nb_in_train_set': number_of_images_in_train_set, 'nb_in_test_set': number_of_images_in_test_set, 'number_of_classes': number_of_classes}
 
-# Plot an image and the target
+# Plot an image and the target 
+data = FashionMNIST(os.getcwd(), train=True, download=True)
+image, target = data[6]
+
+plot_one_tensor(image)
 
 """## Create a convolutional neural network
 
@@ -650,35 +660,24 @@ Softmax
 class CNNModel(nn.Module):
     def __init__(self, classes=10):
         super().__init__()
-        # YOUR CODE HERE 
         self.conv1 = nn.Conv2d(1, 128, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
         self.conv4 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1)
-
         self.maxpool = nn.MaxPool2d(kernel_size=2)
         self.relu = nn.ReLU()
-
         self.fct1 = nn.Linear(32*7*7, 64) 
         self.fct2 = nn.Linear(64, 40)
         self.fct3 = nn.Linear(40, 10)
 
     def forward(self, input):
-        # YOUR CODE HERE 
-        #Convolution + Maxpool
         conv = self.conv1(input)
         conv = self.conv2(conv)
-
         conv = self.maxpool(conv)
         conv = self.conv3(conv)
         conv = self.conv4(conv)
-
         conv = self.maxpool(conv)
-
-        #Flatten
         flat = conv.reshape(conv.size(0), -1)
-
-        #Fully-Connected
         fcon = self.fct1(flat)
         fcon = self.fct2(fcon)
         fcon = self.fct3(fcon)
@@ -694,7 +693,6 @@ def train_one_epoch(model, device, data_loader, optimizer):
         optimizer.zero_grad()
         output = model(data)
 
-        # YOUR CODE HERE 
         loss = F.cross_entropy(output, target)
         loss.backward()
         train_loss += loss.item()
@@ -715,7 +713,6 @@ def evaluation(model, device, data_loader):
     for num, (data, target) in tq.tqdm(enumerate(data_loader), total=len(data_loader.dataset)/data_loader.batch_size):
         data, target = data.to(device), target.to(device)
         output = model(data)
-        # YOUR CODE HERE 
         eval_loss = F.cross_entropy(output, target).item()
         prediction = output.argmax(dim=1)
         correct += torch.sum(prediction.eq(target)).item()
@@ -727,7 +724,6 @@ def evaluation(model, device, data_loader):
 if __name__ == "__main__":
     
     # Network Hyperparameters 
-    # YOUR CODE HERE 
     minibatch_size = 17
     nepoch = 24
     learning_rate = 0.01
@@ -737,7 +733,6 @@ if __name__ == "__main__":
     model = CNNModel()
     model.to(device)
 
-    # YOUR CODE HERE 
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     # Train for an number of epoch 
