@@ -183,9 +183,9 @@ def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
 
 def target_to_one_hot(targets: torch.Tensor, num_classes=10) -> torch.Tensor:
     """Create the one hot representation of the target""" 
-    one_hot_matrix = torch.zeros([targets.shape[0], num_classes], dtype=torch.float32)
-    for i in range(targets.shape[0]):
-      one_hot_matrix[i][int(targets[i])] = 1
+    one_hot_matrix = torch.zeros([targets.shape[0], num_classes])
+    for indice in range(targets.shape[0]):
+      one_hot_matrix[indice][int(targets[indice])] = 1
     return one_hot_matrix
 
 # However as mention above pytorch already has some built-ins function 
@@ -200,9 +200,9 @@ assert torch.allclose(sigmoid(mat_torch), torch.sigmoid(mat_torch))
 print(sigmoid(mat_torch))
 print(torch.sigmoid(mat_torch))
 
-# assert torch.allclose(sotfmax(mat_torch))
-# print(softmax(mat_torch))
-# print(torch.softmax(mat_torch, dim=1))
+assert torch.allclose(softmax(mat_torch),torch.softmax(mat_torch, dim=1))
+print(softmax(mat_torch))
+print(torch.softmax(mat_torch, dim=1))
 
 """## Transforming our Neural network from TP1"""
 
@@ -219,10 +219,10 @@ if __name__ == "__main__":
     X_test = normalize_tensor(X_test)
     X_test = torch.from_numpy(X_test.astype(np.float32))
 
-    y_train = target_to_one_hot(y_train)
+    y_train = target_to_one_hot(y_train).numpy()
     y_train = torch.from_numpy(y_train).long()
 
-    y_test = target_to_one_hot(y_test)
+    y_test = target_to_one_hot(y_test).numpy()
     y_test = torch.from_numpy(y_test).long()
 
 """Your remember the famous `class FFNN` from **TP1** ?? 
@@ -343,7 +343,7 @@ class FFNN(nn.Module):
         print(f"Training Loss: {loss:.3f}, Training accuracy: {error_sum_train / nbatch:.3f}, Test accuracy: {error_test:.3f}")
       return loss, error_test
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     minibatch_size = 28
     nepoch = 50
     learning_rate = 0.1
@@ -351,7 +351,7 @@ if __name__ == "__main__":
     print(ffnn)
     loss, err = ffnn.train(nepoch, X_train, y_train, X_test, y_test)
 
-"""In pytorch a very convinient way to load data in batch si to use the data loader. 
+In pytorch a very convinient way to load data in batch si to use the data loader. 
 
 Let's update the class to use it, we are also going to use dataset available in pytorch vision.
 """
@@ -485,6 +485,7 @@ R_0 = np.array([[0, 0, 0, 0, 0],
                 [18, 237, 163, 119, 53],
                 [90, 89, 178, 75, 247],
                 [209, 216, 48, 135, 232]])
+print(R_0)
 
 """What is the result of convolution of $ I_0 \ast K_1 $"""
 
@@ -494,6 +495,8 @@ R_1 = np.array([[1005, -173, 46, -280, 513],
                 [280, 390, 1010, 295, 1040],
                 [942, 1048, 316, 240, 1154],
                 [1570, 738, 934, 945, 1477]])
+
+print(R_1)
 
 """## 2) Computation using __numpy__
 
@@ -643,36 +646,40 @@ class CNNModel(nn.Module):
     def __init__(self, classes=10):
         super().__init__()
         # YOUR CODE HERE 
-        self.conv1 =nn.Conv2d(1,32,3,padding=10)
-        self.conv2 =nn.Conv2d(32,32,3,padding=10)
-        self.maxpool = nn.MaxPool2d(2,2)
-        self.conv3 =nn.Conv2d(32,50,3,padding=10)
-        self.conv4 =nn.Conv2d(50,32,3,padding=10)
-        self.fc1 = nn.Linear(32*7*7, 64)
-        self.fc2 = nn.Linear(64, 40)
-        self.fc3 = nn.Linear(40, 10)
-        self.activation = nn.ReLU()
+        self.conv1 = nn.Conv2d(1, 128, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1)
+
+        self.maxpool = nn.MaxPool2d(kernel_size=2)
+        self.relu = nn.ReLU()
+
+        self.fct1 = nn.Linear(32*7*7, 64) 
+        self.fct2 = nn.Linear(64, 40)
+        self.fct3 = nn.Linear(40, 10)
 
     def forward(self, input):
-        x = self.conv1(input)
         # YOUR CODE HERE 
-        x = self.activation(x)
-        x = self.conv2(x)
-        x = self.activation(x)
-        x = self.maxpool(x)
-        x = self.conv3(x)
-        x = self.activation(x)
-        x = self.conv4(x)
-        x = self.activation(x)
-        x = self.maxpool(x)
-        x = x.reshape(x.size(0),-1)
-        x = self.fc1(x)
-        x = self.activation(x)
-        x = self.fc2(x)
-        x = self.activation(x)
-        x = self.fc3(x)
+        #Convolution + Maxpool
+        conv = self.conv1(input)
+        conv = self.conv2(conv)
 
-        return x
+        conv = self.maxpool(conv)
+        conv = self.conv3(conv)
+        conv = self.conv4(conv)
+
+        conv = self.maxpool(conv)
+
+        #Flatten
+        flat = conv.reshape(conv.size(0), -1)
+
+        #Fully-Connected
+        fcon = self.fct1(flat)
+        fcon = self.fct2(fcon)
+        fcon = self.fct3(fcon)
+
+        y = self.relu(fcon)
+        return y
 
 def train_one_epoch(model, device, data_loader, optimizer):
     train_loss = 0
@@ -704,7 +711,7 @@ def evaluation(model, device, data_loader):
         data, target = data.to(device), target.to(device)
         output = model(data)
         # YOUR CODE HERE 
-        eval_loss += F.cross_entropy(output, target).item()
+        eval_loss = F.cross_entropy(output, target).item()
         prediction = output.argmax(dim=1)
         correct += torch.sum(prediction.eq(target)).item()
     result = {'loss': eval_loss / len(data_loader.dataset),
@@ -716,21 +723,17 @@ if __name__ == "__main__":
     
     # Network Hyperparameters 
     # YOUR CODE HERE 
-    minibatch_size = 20
-    nepoch = 20
+    minibatch_size = 17
+    nepoch = 24
     learning_rate = 0.01
-    momentum = 0.5
+    momentum = 0.92
 
 
     model = CNNModel()
     model.to(device)
 
     # YOUR CODE HERE 
-    optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-    fmnist_train = FashionMNIST(os.getcwd(), train=True, download=True, transform=transforms.ToTensor())
-    fmnist_train = DataLoader(fmnist_train, batch_size=32, num_workers=4, pin_memory=True)
-    fmnist_val = FashionMNIST(os.getcwd(), train=False, download=True, transform=transforms.ToTensor())
-    fmnist_val = DataLoader(fmnist_val, batch_size=32, num_workers=4,  pin_memory=True)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     # Train for an number of epoch 
     for epoch in range(nepoch):
@@ -739,11 +742,16 @@ if __name__ == "__main__":
         train_result = train_one_epoch(model, device, mnist_train, optimizer)
         print(f"Result Training dataset {train_result}")
 
-      eval_result = evaluation(model, device, fmnist_val)
+      eval_result = evaluation(model, device, mnist_val)
       print(f"Result Test dataset {eval_result}")
 
 """## Open Analysis
 Same as TP 1 please write a short description of your experiment
+
+Lors de cette expérience, j'ai un résultat de 98.5% de test accuracy.
+Pour cela j'ai mis un grand nombre de layers pour obtenir la meilleure précision possible
+je n'ai pas changé le learning rate car il permet d'aller très précisément et plus haut, la précision est moindre avec beaucoup d'epoch
+j'ai aussi mis un gros momentum pour ne pas avoir de trop gros écart entre chaque test surtout lorsqu'on a déjà une grosse accuracy.
 
 # BONUS 
 
@@ -782,6 +790,4 @@ if __name__ == "__main__" :
     with torch.no_grad():
         output = model(input_batch)['out'][0]
     output_predictions = output.argmax(0)
-
-  pass
 
