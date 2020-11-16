@@ -91,27 +91,28 @@ n_rowsxn_columsxn_channels that contains a default value every where
 
 def build_image_like_tensor(n_rows:int, n_colums: int, n_channels:int, default_value: int)-> np.ndarray:
   
-  my_tensor = torch.empty(n_rows, n_colums, n_channels)
-  my_tensor.new_full((n_rows, n_colums, n_channels),default_value)
-  return my_tensor
+  tensor = np.ones((n_rows, n_colums, n_channels))
+  tensor = default_value*tensor
+  
+  return tensor
 
 # Create 3 different tensors with the above function containing different value between [0,255]
 # Uncomment the 3 line below and complete with your answer 
 
-white_like = build_image_like_tensor(20,20,1,255)
-gray_like = build_image_like_tensor(20,20,1,233)
-black_like = build_image_like_tensor(20,20,1,0)
+white_like = build_image_like_tensor( 250, 250, 3, 1)
+gray_like = build_image_like_tensor( 250, 250, 3, 0.5)
+black_like = build_image_like_tensor( 250, 250, 3, 0)
 
 # Each of the tensor that you have created can be seen as an image. Use here is the way to display it using matplotlib imshow:
 def plot_one_tensor(image_tensor: np.array):
     """Function to plot the image tensor"""
     plt.imshow(image_tensor, cmap='gray')
 
-plot_one_tensor(white_like.numpy()[:,:,0])
+plot_one_tensor(white_like)
 
-plot_one_tensor(gray_like.numpy().reshape(20,20))
+plot_one_tensor(gray_like)
 
-plot_one_tensor(black_like.reshape(20,20))
+plot_one_tensor(black_like)
 
 """We saw that an digital image is the combination of a 3 channel tensor RGB. 
 Each channel represent respectively the R red componant, G greed componant, B blue componant.
@@ -122,15 +123,15 @@ Each channel represent respectively the R red componant, G greed componant, B bl
 # Uncomment the 3 line below and complete with your answer 
 
 
-# red_like = build_image_like_tensor(...)
-# green_like = build_image_like_tensor(...)
-# blue_like = build_image_like_tensor(...)
+red_like = build_image_like_tensor(250, 250, 3, [[[1, 0, 0]]])
+green_like = build_image_like_tensor(250, 250, 3, [[[0, 1, 0]]])
+blue_like = build_image_like_tensor(250, 250, 3, [[[0, 0, 1]]])
 
-#plot_one_tensor(red_like)
+plot_one_tensor(red_like)
 
-#plot_one_tensor(green_like)
+plot_one_tensor(green_like)
 
-#plot_one_tensor(blue_like)
+plot_one_tensor(blue_like)
 
 """## What Pytorch can do
 
@@ -173,12 +174,12 @@ def normalize_tensor(input_tensor: torch.Tensor) -> torch.Tensor:
 
 def sigmoid(input_tensor: torch.Tensor) -> torch.Tensor:
     """Apply a sigmoid to the input Tensor"""
-    sig = torch.sigmoid(input_tensor)
+    sig = torch.sigmoid(torch.from_numpy(input_tensor))
     return sig
 
 def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
     """Apply a softmax to the input tensor"""
-    soft = torch.softmax(input_tensor, dim=1)
+    soft = torch.softmax(torch.from_numpy(input_tensor), dim=1)
     return soft
 
 def target_to_one_hot(targets: torch.Tensor, num_classes=10) -> torch.Tensor:
@@ -616,7 +617,7 @@ def fashion_mnist_dataset_answer():
     shape = (28,28)  # replace None with the value you found
     number_of_images_in_train_set = 1875
     number_of_images_in_test_set = 313
-    number_of_classes = 11
+    number_of_classes = 10
     return {'shape': shape, 'nb_in_train_set': number_of_images_in_train_set, 'nb_in_test_set': number_of_images_in_test_set, 'number_of_classes': number_of_classes}
 
 # Plot an image and the target
