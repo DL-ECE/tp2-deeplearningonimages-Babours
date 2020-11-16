@@ -167,28 +167,25 @@ We can use the same function from TP-1
 
 def normalize_tensor(input_tensor: torch.Tensor) -> torch.Tensor:
     """Apply a normalization to the tensor"""
-    normalized_dataset =  (input_tensor-np.min(input_tensor))/255
-    return normalized_dataset
+    normalized_tensor = input_tensor/255
+    return normalized_tensor
    
 
 def sigmoid(input_tensor: torch.Tensor) -> torch.Tensor:
     """Apply a sigmoid to the input Tensor"""
-    sig = 1/(1+np.exp(-input_tensor))
+    sig = torch.sigmoid(input_tensor)
     return sig
 
 def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
     """Apply a softmax to the input tensor"""
-    X_expo = np.exp(input_tensor)
-    X_sum = np.sum(X_expo, axis=1).reshape(-1,1)
-    soft = X_expo/X_sum
-
+    soft = torch.softmax(input_tensor, dim=1)
     return soft
 
-def target_to_one_hot(target: torch.Tensor) -> torch.Tensor:
+def target_to_one_hot(targets: torch.Tensor, num_classes=10) -> torch.Tensor:
     """Create the one hot representation of the target""" 
-    one_hot_matrix = np.zeros((target.shape[0], 10))
-    target = target.astype(int)
-    one_hot_matrix[np.arange(len(target)), target] = 1 
+    one_hot_matrix = torch.zeros([targets.shape[0], num_classes], dtype=torch.float32)
+    for i in range(targets.shape[0]):
+      one_hot_matrix[i][int(targets[i])] = 1
     return one_hot_matrix
 
 # However as mention above pytorch already has some built-ins function 
@@ -646,13 +643,36 @@ class CNNModel(nn.Module):
     def __init__(self, classes=10):
         super().__init__()
         # YOUR CODE HERE 
-        self.conv1 = NotImplemented
+        self.conv1 =nn.Conv2d(1,32,3,padding=10)
+        self.conv2 =nn.Conv2d(32,32,3,padding=10)
+        self.maxpool = nn.MaxPool2d(2,2)
+        self.conv3 =nn.Conv2d(32,50,3,padding=10)
+        self.conv4 =nn.Conv2d(50,32,3,padding=10)
+        self.fc1 = nn.Linear(32*7*7, 64)
+        self.fc2 = nn.Linear(64, 40)
+        self.fc3 = nn.Linear(40, 10)
+        self.activation = nn.ReLU()
 
     def forward(self, input):
         x = self.conv1(input)
         # YOUR CODE HERE 
-        y = NotImplemented
-        return y
+        x = self.activation(x)
+        x = self.conv2(x)
+        x = self.activation(x)
+        x = self.maxpool(x)
+        x = self.conv3(x)
+        x = self.activation(x)
+        x = self.conv4(x)
+        x = self.activation(x)
+        x = self.maxpool(x)
+        x = x.reshape(x.size(0),-1)
+        x = self.fc1(x)
+        x = self.activation(x)
+        x = self.fc2(x)
+        x = self.activation(x)
+        x = self.fc3(x)
+
+        return x
 
 def train_one_epoch(model, device, data_loader, optimizer):
     train_loss = 0
@@ -663,7 +683,7 @@ def train_one_epoch(model, device, data_loader, optimizer):
         output = model(data)
 
         # YOUR CODE HERE 
-        loss = NotImplemented
+        loss = F.cross_entropy(output, target)
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
@@ -684,7 +704,7 @@ def evaluation(model, device, data_loader):
         data, target = data.to(device), target.to(device)
         output = model(data)
         # YOUR CODE HERE 
-        eval_loss = NotImplemented
+        eval_loss += F.cross_entropy(output, target).item()
         prediction = output.argmax(dim=1)
         correct += torch.sum(prediction.eq(target)).item()
     result = {'loss': eval_loss / len(data_loader.dataset),
@@ -696,17 +716,21 @@ if __name__ == "__main__":
     
     # Network Hyperparameters 
     # YOUR CODE HERE 
-    minibatch_size = NotImplemented
-    nepoch = NotImplemented
-    learning_rate = NotImplemented
-    momentum = NotImplemented
+    minibatch_size = 20
+    nepoch = 20
+    learning_rate = 0.01
+    momentum = 0.5
 
 
     model = CNNModel()
     model.to(device)
 
     # YOUR CODE HERE 
-    optimizer = NotImplemented
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+    fmnist_train = FashionMNIST(os.getcwd(), train=True, download=True, transform=transforms.ToTensor())
+    fmnist_train = DataLoader(fmnist_train, batch_size=32, num_workers=4, pin_memory=True)
+    fmnist_val = FashionMNIST(os.getcwd(), train=False, download=True, transform=transforms.ToTensor())
+    fmnist_val = DataLoader(fmnist_val, batch_size=32, num_workers=4,  pin_memory=True)
 
     # Train for an number of epoch 
     for epoch in range(nepoch):
@@ -715,7 +739,7 @@ if __name__ == "__main__":
         train_result = train_one_epoch(model, device, mnist_train, optimizer)
         print(f"Result Training dataset {train_result}")
 
-      eval_result = evaluation(model, device, mnist_val)
+      eval_result = evaluation(model, device, fmnist_val)
       print(f"Result Test dataset {eval_result}")
 
 """## Open Analysis
@@ -758,6 +782,6 @@ if __name__ == "__main__" :
     with torch.no_grad():
         output = model(input_batch)['out'][0]
     output_predictions = output.argmax(0)
-    
-    pass
+
+  pass
 
