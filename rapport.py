@@ -178,7 +178,7 @@ def sigmoid(input_tensor: torch.Tensor) -> torch.Tensor:
       fct = torch.nn.Sigmoid()
       sig = fct(input_tensor)
     else:
-      sig = torch.sigmoid(torch.from_numpy(input_tensor))
+      sig = 1/(1+np.exp(-input_tensor))
     return  sig
 
 def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
@@ -187,7 +187,7 @@ def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
       fct = torch.nn.Softmax(dim=1)
       softm = fct(input_tensor)
     else:
-      softm = torch.softmax(torch.from_numpy(input_tensor),dim=1)
+      softm = sigmoid(input_tensor)*(1-sigmoid(input_tensor))
     return  softm
 
 def target_to_one_hot(targets: torch.Tensor, num_classes=10) -> torch.Tensor:
