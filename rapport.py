@@ -590,9 +590,7 @@ if __name__ == "__main__" :
   fmnist_val = FashionMNIST(os.getcwd(), train=False, download=True, transform=transforms.ToTensor())
   fmnist_val = DataLoader(fmnist_val, batch_size=32, num_workers=4,  pin_memory=True)
 
-"""Display the 10 image from train set and 10 images from validation set, print their ground truth"""
-
-def display_10_images(dataset):
+  def display_10_images(dataset):
     for num, (image, gt) in enumerate(dataset):
       plot_one_tensor(image[0].squeeze().numpy())
       plt.title(f"{gt[0]}")
@@ -602,8 +600,12 @@ def display_10_images(dataset):
     plt.show()
   
 
-display_10_images(fmnist_train)
-display_10_images(fmnist_val)
+  display_10_images(fmnist_train)
+  display_10_images(fmnist_val)
+
+"""Display the 10 image from train set and 10 images from validation set, print their ground truth"""
+
+
 
 """What is the shape of each images
 How many images do we have
