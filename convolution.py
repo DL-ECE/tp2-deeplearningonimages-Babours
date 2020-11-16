@@ -758,4 +758,6 @@ if __name__ == "__main__" :
     with torch.no_grad():
         output = model(input_batch)['out'][0]
     output_predictions = output.argmax(0)
+    
+    pass
 
