@@ -174,13 +174,15 @@ def normalize_tensor(input_tensor: torch.Tensor) -> torch.Tensor:
 
 def sigmoid(input_tensor: torch.Tensor) -> torch.Tensor:
     """Apply a sigmoid to the input Tensor"""
-    sig = torch.sigmoid(torch.from_numpy(input_tensor))
-    return sig
+    fct = torch.nn.Sigmoid()
+    sig = fct(input_tensor)
+    return  sig
 
 def softmax(input_tensor: torch.Tensor)-> torch.Tensor:
     """Apply a softmax to the input tensor"""
-    soft = torch.softmax(torch.from_numpy(input_tensor), dim=1)
-    return soft
+    fct = torch.nn.Softmax(dim=1)
+    softm = fct(input_tensor)
+    return  softm
 
 def target_to_one_hot(targets: torch.Tensor, num_classes=10) -> torch.Tensor:
     """Create the one hot representation of the target""" 
