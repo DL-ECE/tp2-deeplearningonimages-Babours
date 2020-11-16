@@ -257,8 +257,8 @@ class FFNN(nn.Module):
 
         # We use the built-in activation functions
         # TODO: Maybe try with another activation function ! 
-        self.activation = torch.nn.Sigmoid()
-        # self.activation = torch.nn.ReLU()
+        #self.activation = torch.nn.Sigmoid()
+        self.activation = torch.nn.ReLU()
 
 
         self.last_activation = torch.nn.Softmax(dim=1)
@@ -275,8 +275,8 @@ class FFNN(nn.Module):
 
         # We use the built-in function to compute the loss
         # TODO: Maybe try with another loss function ! 
-        self.loss_function = torch.nn.MSELoss()
-        # self.loss_function = torch.nn.CrossEntropyLoss()
+        # self.loss_function = torch.nn.MSELoss()
+        self.loss_function = torch.nn.CrossEntropyLoss()
 
         # We use the built-in function to update the model weights
         self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
@@ -352,7 +352,7 @@ class FFNN(nn.Module):
         print(f"Training Loss: {loss:.3f}, Training accuracy: {error_sum_train / nbatch:.3f}, Test accuracy: {error_test:.3f}")
       return loss, error_test
 
-"""if __name__ == "__main__":
+if __name__ == "__main__":
     minibatch_size = 28
     nepoch = 50
     learning_rate = 0.1
@@ -360,7 +360,7 @@ class FFNN(nn.Module):
     print(ffnn)
     loss, err = ffnn.train(nepoch, X_train, y_train, X_test, y_test)
 
-In pytorch a very convinient way to load data in batch si to use the data loader. 
+"""In pytorch a very convinient way to load data in batch si to use the data loader. 
 
 Let's update the class to use it, we are also going to use dataset available in pytorch vision.
 """
